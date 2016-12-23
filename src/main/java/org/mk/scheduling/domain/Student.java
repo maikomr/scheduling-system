@@ -33,4 +33,8 @@ public class Student extends AuditingEntity {
 
     @ManyToMany(cascade = {CascadeType.ALL})
     private List<org.mk.scheduling.domain.Class> classes = new ArrayList<>();
+
+    public String getFirstName() {
+        return firstName;
+    }
 }

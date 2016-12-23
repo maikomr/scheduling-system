@@ -32,4 +32,12 @@ public class Class extends AuditingEntity {
 
     @ManyToMany(mappedBy = "classes")
     private List<Student> students = new ArrayList<>();
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getTitle() {
+        return title;
+    }
 }
