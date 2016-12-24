@@ -40,4 +40,16 @@ public class Class extends AuditingEntity {
     public String getTitle() {
         return title;
     }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }
