@@ -10,4 +10,4 @@ This project uses the following technologies:
 * [Spring REST Docs](http://docs.spring.io/spring-restdocs/docs/current/reference/html5/) for test driven generated api documentation.
 
 ## Documentation
-React Intl's docs are in this GitHub repo's [Wiki](https://github.com/maikomr/scheduling-system/wiki).
+Scheduling System docs are in this GitHub repo's [Wiki](https://github.com/maikomr/scheduling-system/wiki).
