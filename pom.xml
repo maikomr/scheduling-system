@@ -114,7 +114,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                             <backend>html</backend>
                             <doctype>book</doctype>
                             <attributes>
-                                <snippets>${project.build.directory}/generated-snippets</snippets>
+                                <snippets>${snippetsDirectory}</snippets>
                             </attributes>
                         </configuration>
                     </execution>
