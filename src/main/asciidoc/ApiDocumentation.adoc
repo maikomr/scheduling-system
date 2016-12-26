@@ -1,0 +1,362 @@
+= RESTful Scheduling System API Guide
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+[[overview]]
+= Overview
+
+[[overview-http-verbs]]
+== HTTP verbs
+
+RESTful Scheduling System uses the standard HTTP and REST verbs.
+
+|===
+| Verb | Usage
+
+| `GET`
+| Used to retrieve a resource
+
+| `POST`
+| Used to create a new resource
+
+| `PATCH`
+| Used to update an existing resource, including partial updates
+
+| `DELETE`
+| Used to delete an existing resource
+|===
+
+[[overview-http-status-codes]]
+== HTTP status codes
+
+RESTful Scheduling System uses the standard HTTP status codes.
+
+|===
+| Status code | Usage
+
+| `200 OK`
+| The request completed successfully
+
+| `201 Created`
+| A new resource has been created successfully. The resource's URI is available from the response's
+`Location` header
+
+| `204 No Content`
+| An update to an existing resource has been applied successfully
+
+| `400 Bad Request`
+| The request was malformed. The response body will include an error providing further information
+
+| `404 Not Found`
+| The requested resource did not exist
+|===
+
+[[overview-errors]]
+== Errors
+
+Whenever an error response (status code >= 400) is returned, the body will contain a JSON object
+that describes the problem. The error object has the following structure:
+
+include::{snippets}/error/response-fields.adoc[]
+
+For example, a request that attempts to assign a non-existent class to a student will produce a
+`400 Bad Request` response:
+
+include::{snippets}/error/http-response.adoc[]
+
+[[overview-hypermedia]]
+== Hypermedia
+
+RESTful Scheduling System uses hypermedia and resources include links to other resources in their
+responses. Responses are in http://stateless.co/hal_specification.html[Hypertext Application
+from resource to resource.
+Language (HAL)] format. Links can be found beneath the `_links` key. Users of the API should
+not create URIs themselves, instead they should use the above-described links to navigate
+
+[[resources]]
+= Resources
+
+
+
+[[resources-index]]
+== Index
+
+The index provides the entry point into the service.
+
+
+
+[[resources-index-access]]
+=== Accessing the index
+
+A `GET` request is used to access the index
+
+==== Response structure
+
+include::{snippets}/index/response-fields.adoc[]
+
+==== Example response
+
+include::{snippets}/index/http-response.adoc[]
+
+
+
+[[resources-index-links]]
+==== Links
+
+include::{snippets}/index/links.adoc[]
+
+
+
+[[resources-students]]
+== Students
+
+The Students resources is used to create and list students
+
+
+
+[[resources-students-list]]
+=== Listing students
+
+A `GET` request will list all of the service's students.
+
+==== Response structure
+
+include::{snippets}/students-list/response-fields.adoc[]
+
+==== Example request
+
+include::{snippets}/students-list/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/students-list/http-response.adoc[]
+
+[[resources-students-list-links]]
+==== Links
+
+include::{snippets}/students-list/links.adoc[]
+
+
+[[resources-students-create]]
+=== Creating a student
+
+A `POST` request is used to create a student
+
+==== Request structure
+
+include::{snippets}/student-create/request-fields.adoc[]
+
+==== Example request
+
+include::{snippets}/student-create/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/student-create/http-response.adoc[]
+
+
+[[resources-students-search]]
+=== Searching students
+
+A `GET` request is used to search students
+
+==== Request parameters structure
+
+include::{snippets}/student-search/request-parameters.adoc[]
+
+==== Example request
+
+include::{snippets}/student-search/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/student-search/http-response.adoc[]
+
+[[resources-classes]]
+== Classes
+
+The Classes resource is used to create and list classes.
+
+
+
+[[resources-classes-list]]
+=== Listing classes
+
+A `GET` request will list all of the service's classes.
+
+==== Response structure
+
+include::{snippets}/classes-list/response-fields.adoc[]
+
+==== Example request
+
+include::{snippets}/classes-list/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/classes-list/http-response.adoc[]
+
+[[resources-classes-list-links]]
+==== Links
+
+include::{snippets}/classes-list/links.adoc[]
+
+
+
+[[resources-classes-create]]
+=== Creating a class
+
+A `POST` request is used to create a student
+
+==== Request structure
+
+include::{snippets}/class-create/request-fields.adoc[]
+
+==== Example request
+
+include::{snippets}/class-create/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/class-create/http-response.adoc[]
+
+
+[[resources-classes-search]]
+=== Searching classes
+
+A `GET` request is used to search classes
+
+==== Request parameters structure
+
+include::{snippets}/class-search/request-parameters.adoc[]
+
+==== Example request
+
+include::{snippets}/student-search/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/student-search/http-response.adoc[]
+
+
+[[resources-student]]
+== Student
+
+The Student resource is used to retrieve, update, and delete individual students
+
+
+[[resources-student-links]]
+=== Links
+
+include::{snippets}/student-get/links.adoc[]
+
+
+
+[[resources-student-retrieve]]
+=== Retrieve a student
+
+A `GET` request will retrieve the details of a student
+
+==== Response structure
+
+include::{snippets}/student-get/response-fields.adoc[]
+
+==== Example request
+
+include::{snippets}/student-get/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/student-get/http-response.adoc[]
+
+
+
+[[resources-student-update]]
+=== Update a student
+
+A `PATCH` request is used to update a student
+
+==== Request structure
+
+include::{snippets}/student-update/request-fields.adoc[]
+
+To leave an attribute of a student unchanged, any of the above may be omitted from the request.
+
+==== Example request
+
+include::{snippets}/student-update/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/student-update/http-response.adoc[]
+
+
+[[resources-student-enroll]]
+=== Enroll a student in a class
+A `POST` request is used to enroll a student in a class
+
+==== Request Structure
+The request body must be a list of class resource URIs
+
+==== Example request
+
+include::{snippets}/student-enroll/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/student-enroll/http-response.adoc[]
+
+
+[[resources-class]]
+== Class
+
+The Class resource is used to retrieve, update, and delete individual classes
+
+
+
+[[resources-class-links]]
+=== Links
+
+include::{snippets}/class-get/links.adoc[]
+
+
+
+[[resources-class-retrieve]]
+=== Retrieve a class
+
+A `GET` request will retrieve the details of a class
+
+==== Response structure
+
+include::{snippets}/class-get/response-fields.adoc[]
+
+==== Example request
+
+include::{snippets}/class-get/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/class-get/http-response.adoc[]
+
+
+
+[[resources-class-update]]
+=== Update a class
+
+A `PATCH` request is used to update a class
+
+==== Request structure
+
+include::{snippets}/class-update/request-fields.adoc[]
+
+==== Example request
+
+include::{snippets}/class-update/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/class-update/http-response.adoc[]
