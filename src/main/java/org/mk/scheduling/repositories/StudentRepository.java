@@ -13,5 +13,5 @@ import java.util.List;
  */
 public interface StudentRepository extends PagingAndSortingRepository<Student, Long> {
     @RestResource(path="search", rel="search")
-    List<Class> findByFirstNameContainingOrLastNameContainingAllIgnoreCase(@Param("firstName")String firstName, @Param("lastName")String lastName);
+    List<Student> findByFirstNameContainingOrLastNameContainingAllIgnoreCase(@Param("firstName")String firstName, @Param("lastName")String lastName);
 }

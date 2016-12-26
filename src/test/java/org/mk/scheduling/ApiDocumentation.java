@@ -12,6 +12,8 @@ import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuild
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -207,12 +209,6 @@ public class ApiDocumentation {
                 .andExpect(status().isCreated()).andReturn().getResponse()
                 .getHeader("Location");
 
-        this.mockMvc.perform(get(studentLocation)).andExpect(status().isOk())
-                .andExpect(jsonPath("firstName", is(student.get("firstName"))))
-                .andExpect(jsonPath("lastName", is(student.get("lastName"))))
-                .andExpect(jsonPath("_links.self.href", is(studentLocation)))
-                .andExpect(jsonPath("_links.classes", is(notNullValue())));
-
         Map<String, String> aClass = new HashMap<String, String>();
         aClass.put("code", "physics-101");
         aClass.put("title", "Physics 101");
@@ -236,6 +232,27 @@ public class ApiDocumentation {
     }
 
     @Test
+    public void studentSearch() throws Exception {
+        Map<String, Object> student = new HashMap<String, Object>();
+        student.put("firstName", "Arya");
+        student.put("lastName", "Stark");
+
+        this.mockMvc.perform(
+                post("/students").contentType(MediaTypes.HAL_JSON).content(
+                        this.objectMapper.writeValueAsString(student))).andExpect(
+                status().isCreated());
+
+        String studentsSearchUrl = "/students/search/search?firstName=ry&lastName=ar";
+        this.mockMvc.perform(get(studentsSearchUrl)).andExpect(status().isOk())
+                .andDo(document("student-search", requestParameters(
+                        parameterWithName("firstName").description("The first name of the students to search"),
+                        parameterWithName("lastName").description("The last name of the students to search")),
+                        responseFields(
+                                fieldWithPath("_embedded.students").description("An array of <<resources-student, Student resources>>"),
+                                fieldWithPath("_links").description("<<resources-search-links,Links>> to other resources"))));
+    }
+
+    @Test
     public void studentEnroll() throws Exception {
         Map<String, Object> student = new HashMap<String, Object>();
         student.put("firstName", "Arya");
@@ -247,12 +264,6 @@ public class ApiDocumentation {
                                 this.objectMapper.writeValueAsString(student)))
                 .andExpect(status().isCreated()).andReturn().getResponse()
                 .getHeader("Location");
-
-        this.mockMvc.perform(get(studentLocation)).andExpect(status().isOk())
-                .andExpect(jsonPath("firstName", is(student.get("firstName"))))
-                .andExpect(jsonPath("lastName", is(student.get("lastName"))))
-                .andExpect(jsonPath("_links.self.href", is(studentLocation)))
-                .andExpect(jsonPath("_links.classes", is(notNullValue())));
 
         Map<String, String> aClass = new HashMap<String, String>();
         aClass.put("code", "algebra-101");
@@ -374,6 +385,29 @@ public class ApiDocumentation {
                         this.objectMapper.writeValueAsString(classUpdate)))
                 .andExpect(status().isNoContent())
                 .andDo(document("class-update"));
+    }
+
+    @Test
+    public void classSearch() throws Exception {
+        Map<String, String> aClass = new HashMap<String, String>();
+        aClass.put("code", "physics-101");
+        aClass.put("title", "Physics 101");
+        aClass.put("description", "Description of Physics 101");
+
+        this.mockMvc.perform(
+                post("/classes").contentType(MediaTypes.HAL_JSON).content(
+                        this.objectMapper.writeValueAsString(aClass)))
+                .andExpect(status().isCreated());
+
+        String classesSearchUrl = "/classes/search/search?code=phys&title=\"\"&description=\"\"";
+        this.mockMvc.perform(get(classesSearchUrl)).andExpect(status().isOk())
+                .andDo(document("class-search", requestParameters(
+                        parameterWithName("code").description("The code of the classes to search"),
+                        parameterWithName("title").description("The title of the classes to search"),
+                        parameterWithName("description").description("The description of the classes to search")),
+                        responseFields(
+                                fieldWithPath("_embedded.classes").description("An array of <<resources-class, Class resources>>"),
+                                fieldWithPath("_links").description("<<resources-search-links,Links>> to other resources"))));
     }
 
     private void createStudent(String firstName, String lastName) {
