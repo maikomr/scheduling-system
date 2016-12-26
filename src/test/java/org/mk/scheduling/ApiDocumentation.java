@@ -39,6 +39,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import javax.servlet.RequestDispatcher;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,6 +82,29 @@ public class ApiDocumentation {
     }
 
     @Test
+    public void error() throws Exception {
+        this.mockMvc
+                .perform(get("/error")
+                        .requestAttr(RequestDispatcher.ERROR_STATUS_CODE, 400)
+                        .requestAttr(RequestDispatcher.ERROR_REQUEST_URI,
+                                "/students")
+                        .requestAttr(RequestDispatcher.ERROR_MESSAGE,
+                                "The student 'http://localhost:8080/students/123' does not exist"))
+                .andDo(print()).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("error", is("Bad Request")))
+                .andExpect(jsonPath("timestamp", is(notNullValue())))
+                .andExpect(jsonPath("status", is(400)))
+                .andExpect(jsonPath("path", is(notNullValue())))
+                .andDo(document("error",
+                        responseFields(
+                                fieldWithPath("error").description("The HTTP error that occurred, e.g. `Bad Request`"),
+                                fieldWithPath("message").description("A description of the cause of the error"),
+                                fieldWithPath("path").description("The path to which the request was made"),
+                                fieldWithPath("status").description("The HTTP status code, e.g. `400`"),
+                                fieldWithPath("timestamp").description("The time, in milliseconds, at which the error occurred"))));
+    }
+
+    @Test
     public void index() throws Exception {
         this.mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
@@ -109,7 +133,7 @@ public class ApiDocumentation {
                                 linkWithRel("search").description("Link to the search resource")),
                         responseFields(
                                 fieldWithPath("_embedded.students").description("An array of <<resources-student, Student resources>>"),
-                                fieldWithPath("_links").description("<<resources-classes-list-links, Links>> to other resources"),
+                                fieldWithPath("_links").description("<<resources-students-list-links, Links>> to other resources"),
                                 fieldWithPath("page").description("Contains pagination info"),
                                 fieldWithPath("page.size").description("Number of students on this page"),
                                 fieldWithPath("page.size").description("Number of students on this collection"),
@@ -222,13 +246,19 @@ public class ApiDocumentation {
                 .getHeader("Location");
 
         Map<String, Object> studentUpdate = new HashMap<String, Object>();
+        studentUpdate.put("firstName", "Arya");
+        studentUpdate.put("lastName", "Stark");
         studentUpdate.put("classes", Arrays.asList(classLocation));
 
         this.mockMvc.perform(
                 patch(studentLocation).contentType(MediaTypes.HAL_JSON).content(
                         this.objectMapper.writeValueAsString(studentUpdate)))
                 .andExpect(status().isNoContent())
-                .andDo(document("student-update"));
+                .andDo(document("student-update",
+                        requestFields(
+                                fieldWithPath("firstName").description("The student's first name"),
+                                fieldWithPath("lastName").description("The student's last name"),
+                                fieldWithPath("classes").description("An array of class resource URIs"))));
     }
 
     @Test
@@ -249,7 +279,7 @@ public class ApiDocumentation {
                         parameterWithName("lastName").description("The last name of the students to search")),
                         responseFields(
                                 fieldWithPath("_embedded.students").description("An array of <<resources-student, Student resources>>"),
-                                fieldWithPath("_links").description("<<resources-search-links,Links>> to other resources"))));
+                                fieldWithPath("_links").description("<<resources-student-links,Links>> to other resources"))));
     }
 
     @Test
@@ -300,7 +330,7 @@ public class ApiDocumentation {
                                 linkWithRel("search").description("Link to the search resource")),
                         responseFields(
                                 fieldWithPath("_embedded.classes").description("An array of <<resources-class, Class resources>>"),
-                                fieldWithPath("_links").description("<<resources-classes-list-links, Links>> to other resources"),
+                                fieldWithPath("_links").description("<<resources-students-list-links, Links>> to other resources"),
                                 fieldWithPath("page").description("Contains pagination info"),
                                 fieldWithPath("page.size").description("Number of classes on this page"),
                                 fieldWithPath("page.size").description("Number of classes on this collection"),
@@ -347,14 +377,14 @@ public class ApiDocumentation {
                 .andExpect(jsonPath("description", is(aClass.get("description"))))
                 .andDo(document("class-get",
                         links(
-                                linkWithRel("self").description("Canonical link for this <<resources-class, tag>>"),
+                                linkWithRel("self").description("Canonical link for this <<resources-class, class>>"),
                                 linkWithRel("class").description("This <<resources-class, class>>"),
-                                linkWithRel("students").description("The <<resources-tagged-classes,students>> enrolled in this class")),
+                                linkWithRel("students").description("The <<resources-students, students>> enrolled in this class")),
                         responseFields(
                                 fieldWithPath("code").description("The unique code for this class"),
                                 fieldWithPath("title").description("The title of the class"),
                                 fieldWithPath("description").description("The description of the class"),
-                                fieldWithPath("_links").description("<<resources-tag-links,Links>> to other resources"),
+                                fieldWithPath("_links").description("<<resources-class-links,Links>> to other resources"),
                                 fieldWithPath("createdBy").description("Who created this class"),
                                 fieldWithPath("createdDate").description("The date in which this class was created"),
                                 fieldWithPath("modifiedBy").description("Who modified this class"),
@@ -376,15 +406,19 @@ public class ApiDocumentation {
                 .getHeader("Location");
 
         Map<String, Object> classUpdate = new HashMap<String, Object>();
-        aClass.put("code", "algebra-101");
-        aClass.put("title", "Algebra 101");
-        aClass.put("description", "Description of Algebra 101");
+        classUpdate.put("code", "algebra-101");
+        classUpdate.put("title", "Algebra 101");
+        classUpdate.put("description", "Description of Algebra 101");
 
         this.mockMvc.perform(
                 patch(classLocation).contentType(MediaTypes.HAL_JSON).content(
                         this.objectMapper.writeValueAsString(classUpdate)))
                 .andExpect(status().isNoContent())
-                .andDo(document("class-update"));
+                .andDo(document("class-update",
+                        requestFields(
+                                fieldWithPath("code").description("The unique code for this class"),
+                                fieldWithPath("title").description("The title of the class"),
+                                fieldWithPath("description").description("The description of the class"))));
     }
 
     @Test
