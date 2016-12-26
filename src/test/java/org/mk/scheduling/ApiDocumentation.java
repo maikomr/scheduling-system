@@ -7,6 +7,7 @@ import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.li
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.patch;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
@@ -27,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.restdocs.JUnitRestDocumentation;
+import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -92,8 +94,6 @@ public class ApiDocumentation {
 
     @Test
     public void studentsList() throws Exception {
-        this.studentRepository.deleteAll();
-
         createStudent("Robb", "Stark");
         createStudent("Jon", "Snow");
         createStudent("Bran", "Stark");
@@ -116,7 +116,7 @@ public class ApiDocumentation {
     }
 
     @Test
-    public void studentsCreate() throws Exception {
+    public void studentCreate() throws Exception {
         Map<String, String> aClass = new HashMap<String, String>();
         aClass.put("code", "physics-101");
         aClass.put("title", "Physics 101");
@@ -138,7 +138,7 @@ public class ApiDocumentation {
                 post("/students").contentType(MediaTypes.HAL_JSON).content(
                         this.objectMapper.writeValueAsString(student))).andExpect(
                 status().isCreated())
-                .andDo(document("students-create",
+                .andDo(document("student-create",
                         requestFields(
                                 fieldWithPath("firstName").description("The student's first name"),
                                 fieldWithPath("lastName").description("The student's last name"),
@@ -195,10 +195,48 @@ public class ApiDocumentation {
     }
 
     @Test
-    public void classesList() throws Exception {
-        this.studentRepository.deleteAll();
-        this.classRepository.deleteAll();
+    public void studentUpdate() throws Exception {
+        Map<String, Object> student = new HashMap<String, Object>();
+        student.put("firstName", "Jon");
+        student.put("lastName", "Snow");
 
+        String studentLocation = this.mockMvc
+                .perform(
+                        post("/students").contentType(MediaTypes.HAL_JSON).content(
+                                this.objectMapper.writeValueAsString(student)))
+                .andExpect(status().isCreated()).andReturn().getResponse()
+                .getHeader("Location");
+
+        this.mockMvc.perform(get(studentLocation)).andExpect(status().isOk())
+                .andExpect(jsonPath("firstName", is(student.get("firstName"))))
+                .andExpect(jsonPath("lastName", is(student.get("lastName"))))
+                .andExpect(jsonPath("_links.self.href", is(studentLocation)))
+                .andExpect(jsonPath("_links.classes", is(notNullValue())));
+
+        Map<String, String> aClass = new HashMap<String, String>();
+        aClass.put("code", "physics-101");
+        aClass.put("title", "Physics 101");
+        aClass.put("description", "Description of Physics 101");
+
+        String classLocation = this.mockMvc
+                .perform(
+                        post("/classes").contentType(MediaTypes.HAL_JSON).content(
+                                this.objectMapper.writeValueAsString(aClass)))
+                .andExpect(status().isCreated()).andReturn().getResponse()
+                .getHeader("Location");
+
+        Map<String, Object> studentUpdate = new HashMap<String, Object>();
+        studentUpdate.put("classes", Arrays.asList(classLocation));
+
+        this.mockMvc.perform(
+                patch(studentLocation).contentType(MediaTypes.HAL_JSON).content(
+                        this.objectMapper.writeValueAsString(studentUpdate)))
+                .andExpect(status().isNoContent())
+                .andDo(document("student-update"));
+    }
+
+    @Test
+    public void classesList() throws Exception {
         createClass("physics-1O1", "Physics 101", "Description of Physics 101");
         createClass("calculus-1O1", "Calculus 101", "Description of Calculus 101");
         createClass("algebra-1O1", "Algebra 101", "Description of Algebra 101");
@@ -231,7 +269,7 @@ public class ApiDocumentation {
                 post("/classes").contentType(MediaTypes.HAL_JSON).content(
                         this.objectMapper.writeValueAsString(aClass)))
                 .andExpect(status().isCreated())
-                .andDo(document("classes-create",
+                .andDo(document("class-create",
                         requestFields(
                                 fieldWithPath("code").description("The unique code for this class"),
                                 fieldWithPath("title").description("The title of the class"),
@@ -271,6 +309,32 @@ public class ApiDocumentation {
                                 fieldWithPath("createdDate").description("The date in which this class was created"),
                                 fieldWithPath("modifiedBy").description("Who modified this class"),
                                 fieldWithPath("modifiedDate").description("The date in which this class was modified"))));
+    }
+
+    @Test
+    public void classUpdate() throws Exception {
+        Map<String, String> aClass = new HashMap<String, String>();
+        aClass.put("code", "physics-101");
+        aClass.put("title", "Physics 101");
+        aClass.put("description", "Description of Physics 101");
+
+        String classLocation = this.mockMvc
+                .perform(
+                        post("/classes").contentType(MediaTypes.HAL_JSON).content(
+                                this.objectMapper.writeValueAsString(aClass)))
+                .andExpect(status().isCreated()).andReturn().getResponse()
+                .getHeader("Location");
+
+        Map<String, Object> classUpdate = new HashMap<String, Object>();
+        aClass.put("code", "algebra-101");
+        aClass.put("title", "Algebra 101");
+        aClass.put("description", "Description of Algebra 101");
+
+        this.mockMvc.perform(
+                patch(classLocation).contentType(MediaTypes.HAL_JSON).content(
+                        this.objectMapper.writeValueAsString(classUpdate)))
+                .andExpect(status().isNoContent())
+                .andDo(document("class-update"));
     }
 
     private void createStudent(String firstName, String lastName) {
