@@ -236,6 +236,45 @@ public class ApiDocumentation {
     }
 
     @Test
+    public void studentEnroll() throws Exception {
+        Map<String, Object> student = new HashMap<String, Object>();
+        student.put("firstName", "Arya");
+        student.put("lastName", "Stark");
+
+        String studentLocation = this.mockMvc
+                .perform(
+                        post("/students").contentType(MediaTypes.HAL_JSON).content(
+                                this.objectMapper.writeValueAsString(student)))
+                .andExpect(status().isCreated()).andReturn().getResponse()
+                .getHeader("Location");
+
+        this.mockMvc.perform(get(studentLocation)).andExpect(status().isOk())
+                .andExpect(jsonPath("firstName", is(student.get("firstName"))))
+                .andExpect(jsonPath("lastName", is(student.get("lastName"))))
+                .andExpect(jsonPath("_links.self.href", is(studentLocation)))
+                .andExpect(jsonPath("_links.classes", is(notNullValue())));
+
+        Map<String, String> aClass = new HashMap<String, String>();
+        aClass.put("code", "algebra-101");
+        aClass.put("title", "Algebra 101");
+        aClass.put("description", "Description of Algebra 101");
+
+        String classLocation = this.mockMvc
+                .perform(
+                        post("/classes").contentType(MediaTypes.HAL_JSON).content(
+                                this.objectMapper.writeValueAsString(aClass)))
+                .andExpect(status().isCreated()).andReturn().getResponse()
+                .getHeader("Location");
+
+        String studentClassesUrl = studentLocation + "/classes";
+        this.mockMvc.perform(
+                post(studentClassesUrl).contentType("text/uri-list").content(
+                        classLocation))
+                .andExpect(status().isNoContent())
+                .andDo(document("student-enroll"));
+    }
+
+    @Test
     public void classesList() throws Exception {
         createClass("physics-1O1", "Physics 101", "Description of Physics 101");
         createClass("calculus-1O1", "Calculus 101", "Description of Calculus 101");
