@@ -31,7 +31,7 @@ public class Student extends AuditingEntity {
     @Column(length = 45)
     private String lastName;
 
-    @ManyToMany(cascade = {CascadeType.ALL})
+    @ManyToMany
     private List<org.mk.scheduling.domain.Class> classes = new ArrayList<>();
 
     public String getFirstName() {
